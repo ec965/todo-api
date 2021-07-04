@@ -1,14 +1,17 @@
 package main
 
 import (
-	"net/http"
 	"log"
-	"time"
+	"net/http"
 	"os"
+	"time"
+	"fmt"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-    "github.com/gorilla/handlers"
 
+	"github.com/ec965/todo-api/config"
+	"github.com/ec965/todo-api/models"
 	"github.com/ec965/todo-api/routes"
 )
 
@@ -27,6 +30,9 @@ func contentTypeMiddleWare(next http.Handler) http.Handler {
 }
 
 func main() {
+	// database
+	models.Init()
+
 	r := mux.NewRouter()
 	// router middleware
 	r.Use(loggingMiddleware)
@@ -42,10 +48,11 @@ func main() {
 	app = handlers.RecoveryHandler()(app)
 
 	s := &http.Server{
-		Addr: ":8080",
+		Addr: ":"+config.Port,
 		Handler: app,
 		ReadTimeout: 10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
+	fmt.Println("Serving on", s.Addr)
 	log.Fatal(s.ListenAndServe())
 }

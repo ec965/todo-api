@@ -1,6 +1,9 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
+)
 
 type User struct {
 	gorm.Model
@@ -21,4 +24,21 @@ func CreateUserIfNotExist(u User) User {
 		return u
 	}
 	return existingUser
+}
+
+func hashPassword(pw string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
+	return string(hash), err
+}
+
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+	u.Password, err = hashPassword(u.Password)
+	return
+}
+
+func (u *User) BeforeUpdate(tx *gorm.DB) (err error) {
+	if tx.Statement.Changed("Password"){
+		u.Password, err = hashPassword(u.Password)
+	}
+	return
 }

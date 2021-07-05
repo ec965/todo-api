@@ -16,11 +16,11 @@ type response struct {
 	ContentType string
 }
 
-type Error struct {
+type ErrorJson struct {
 	Error string `json:"error"`
 }
 
-type Message struct {
+type MessageJson struct {
 	Message string `json:"message"`
 }
 
@@ -49,4 +49,12 @@ func (res *response) Send(w http.ResponseWriter) {
 
 func Status(status int) *response {
 	return &response{Status: status}
+}
+
+func Error(err string)ErrorJson{
+	return ErrorJson{Error: err}
+}
+
+func Message(msg string) MessageJson {
+	return MessageJson{Message: msg}
 }

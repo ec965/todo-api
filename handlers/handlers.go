@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
+	"github.com/go-playground/form/v4"
 	"gopkg.in/go-playground/validator.v8"
 
 	res "github.com/ec965/todo-api/handlers/response"
@@ -12,50 +12,54 @@ import (
 )
 
 var validate *validator.Validate
+var formDecoder *form.Decoder
 
 func init() {
 	config := &validator.Config{TagName: "validate"}
 	validate = validator.New(config)
-}
-
-type NewUser struct {
-	FirstName string `json:"firstName" validate:"required"`
-	LastName  string `json:"lastName" validate:"required"`
-	Username  string `json:"username" validate:"required"`
-	Password  string `json:"password" validate:"required"`
-	Email     string `json:"email" validate:"required,email"`
-	Role      string `json:"role" validate:"required"`
+	formDecoder = form.NewDecoder()
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	var nu NewUser
-	err := json.NewDecoder(r.Body).Decode(&nu)
+	r.ParseForm()
+	newUser := struct {
+		FirstName string `form:"firstName" validate:"required,max=64"`
+		LastName  string `form:"lastName" validate:"required,max=64"`
+		Username  string `form:"username" validate:"required,max=36"`
+		Password  string `form:"password" validate:"required,max=36,min=6"`
+		Email     string `form:"email" validate:"required,email"`
+		Role      string `form:"role" validate:"required,eq=user|eq=admin"` // maybe validate this against the db
+	}{}
+	err := formDecoder.Decode(&newUser, r.Form)
 
 	if err != nil {
-		res.Status(http.StatusBadRequest).Json(res.Error{Error: "invalid json"}).Send(w)
+		errJson := res.Error("invalid form")
+		res.Status(http.StatusBadRequest).Json(errJson).Send(w)
 		return
 	}
-	fmt.Println(nu)
+	fmt.Println(newUser)
 
-	errs := validate.Struct(nu)
+	err = validate.Struct(newUser)
 
-	if errs != nil {
-		res.Status(http.StatusBadRequest).Json(errs).Send(w)
+	if err != nil {
+		fmt.Println(err)
+		res.Status(http.StatusBadRequest).Json(err).Send(w)
 		return
 	}
 
-	role := models.FindRoleByName(nu.Role)
+	role := models.FindRoleByName(newUser.Role)
 	if role == (models.Role{}) {
-		res.Status(http.StatusBadRequest).Json(res.Error{Error: "invalid role"}).Send(w)
+		errJson := res.Error("invalid role")
+		res.Status(http.StatusBadRequest).Json(errJson).Send(w)
 		return
 	}
 
 	user := models.User{
-		FirstName: nu.FirstName,
-		LastName:  nu.LastName,
-		Username:  nu.Username,
-		Password:  nu.Password,
-		Email:     nu.Email,
+		FirstName: newUser.FirstName,
+		LastName:  newUser.LastName,
+		Username:  newUser.Username,
+		Password:  newUser.Password,
+		Email:     newUser.Email,
 		Role:      role,
 	}
 	models.Db.Create(&user)
@@ -64,5 +68,5 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func Ping(w http.ResponseWriter, r *http.Request) {
-	res.Status(http.StatusOK).Json(res.Message{Message: "pong"}).Send(w)
+	res.Status(http.StatusOK).Json(res.Message("pong")).Send(w)
 }

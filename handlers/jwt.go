@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
+	// "github.com/dgrijalva/jwt-go"
 
-	"github.com/ec965/todo-api/config"
-	res "github.com/ec965/todo-api/handlers/response"
+	// "github.com/ec965/todo-api/config"
+	// res "github.com/ec965/todo-api/handlers/response"
 )
 
 // get the jwt and parse it into a user

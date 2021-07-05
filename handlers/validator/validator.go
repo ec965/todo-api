@@ -19,6 +19,7 @@ func init() {
 	formDecoder = form.NewDecoder()
 }
 
+// TODO: fix reflection errors, can't use generic interface{}
 func isValidForm(w http.ResponseWriter, r *http.Request, form interface{}) bool {
 	r.ParseForm()
 	err := formDecoder.Decode(form, r.Form)
@@ -43,9 +44,11 @@ func isValidData(w http.ResponseWriter, r * http.Request, data interface{}) bool
 
 func IsValid(w http.ResponseWriter, r *http.Request, data interface{})bool {
 	if(!isValidForm(w, r, &data)){
+		fmt.Println("invalid form")
 		return false
 	}
 	if(!isValidData(w, r, &data)){
+		fmt.Println("invalid data")
 		return false
 	}
 	return true

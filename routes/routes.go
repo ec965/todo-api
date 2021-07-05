@@ -15,5 +15,6 @@ func Init(r *mux.Router) {
 	// auth does not require a token
 	auth := r.PathPrefix("/api/auth").Subrouter()
 	auth.HandleFunc("/user", handlers.CreateUser).Methods("POST")
+	auth.HandleFunc("/login", handlers.Login).Methods("POST")
 	auth.HandleFunc("/ping", handlers.Ping).Methods("GET")
 }

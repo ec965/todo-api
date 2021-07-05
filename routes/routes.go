@@ -18,11 +18,4 @@ func Init(r *mux.Router) {
 	auth.HandleFunc("/login", handlers.Login).Methods("POST")
 	auth.HandleFunc("/ping", handlers.Ping).Methods("GET")
 
-
-
-
-
-
-
-	
 }

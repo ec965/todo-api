@@ -12,7 +12,7 @@ var AdminPass string
 var Port string
 var DbName string
 var Secret string
-var TokenDuration int64 
+var TokenDuration int64
 var TokenIssuer string
 
 func envFallback(key string, fallback string) string {

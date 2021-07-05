@@ -41,11 +41,11 @@ func (res *response) Send(w http.ResponseWriter) {
 	if res.ContentType != "" {
 		w.Header().Set("Content-Type", res.ContentType)
 	}
-	if res.Body != nil {
-		w.Write(res.Body)
-	}
 	if res.Status != 0 && res.Status != http.StatusOK {
 		w.WriteHeader(res.Status)
+	}
+	if res.Body != nil {
+		w.Write(res.Body)
 	}
 }
 

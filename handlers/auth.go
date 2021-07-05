@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -35,8 +34,6 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		res.Status(http.StatusBadRequest).Json(errMap).Send(w)
 		return
 	}
-
-	fmt.Println("validated")
 
 	// get the user's role
 	role := models.FindRoleByName(newUser.Role)

@@ -19,7 +19,7 @@ type User struct {
 	jwt.StandardClaims
 }
 
-func (j *User) GetMap() jwt.MapClaims{
+func (j *User) GetMap() jwt.MapClaims {
 	var m jwt.MapClaims
 	jByte, _ := json.Marshal(j)
 	json.Unmarshal(jByte, &m)

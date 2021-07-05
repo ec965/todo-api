@@ -44,7 +44,9 @@ func (res *response) Send(w http.ResponseWriter) {
 	if res.Body != nil {
 		w.Write(res.Body)
 	}
-	w.WriteHeader(res.Status)
+	if res.Status != 0 && res.Status != http.StatusOK {
+		w.WriteHeader(res.Status)
+	}
 }
 
 func Status(status int) *response {

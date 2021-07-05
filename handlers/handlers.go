@@ -8,4 +8,5 @@ import (
 
 func Ping(w http.ResponseWriter, r *http.Request) {
 	res.Status(http.StatusOK).Json(res.Message("pong")).Send(w)
+	w.Write([]byte("hi"))
 }

@@ -25,7 +25,7 @@ func Init() {
 
 	resetDB(&User{}, &Role{})
 
-	// create roles
+	// create default roles
 	roles := createRoles()
 	// create admin user
 	CreateUserIfNotExist(User{

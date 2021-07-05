@@ -1,10 +1,10 @@
 package models
 
 import (
-	"log"
-	"database/sql"
 	"context"
+	"database/sql"
 	"fmt"
+	"log"
 	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib"

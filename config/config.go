@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/joho/godotenv"
 	"fmt"
+	"github.com/joho/godotenv"
 	"os"
 	"strconv"
 )
@@ -36,7 +36,7 @@ func init() {
 	Port = envFallback("PORT", "8080")
 	// database
 	DatabaseUrl = envFallback("DATABASE_URL", "postgres://enochc:test123@localhost:5432/todo")
-	// token 
+	// token
 	Secret = envFallback("SECRET", "very-secret")
 	TokenDuration, err = strconv.ParseInt(envFallback("TOKEN_DURATION", "1200"), 10, 64)
 	if err != nil {

@@ -8,18 +8,19 @@ import (
 )
 
 type User struct {
-	Id        uint
+	ID        uint
 	CreatedAt time.Time
 	Username  string
 	FirstName string
 	LastName  string
 	Email     string
 	Role      string
-	RoleId    string
+	RoleId    uint
+	jwt.StandardClaims
 }
 
-func (j *User) GetMap() map[string]string {
-	var m map[string]string
+func (j *User) GetMap() jwt.MapClaims{
+	var m jwt.MapClaims
 	jByte, _ := json.Marshal(j)
 	json.Unmarshal(jByte, &m)
 	return m

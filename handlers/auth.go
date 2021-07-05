@@ -3,11 +3,13 @@ package handlers
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/ec965/todo-api/config"
+	jwtUser "github.com/ec965/todo-api/handlers/jwt"
 	res "github.com/ec965/todo-api/handlers/response"
 	"github.com/ec965/todo-api/handlers/validator"
 	"github.com/ec965/todo-api/models"
@@ -84,16 +86,23 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"id":        user.ID,
-		"createdAt": user.CreatedAt,
-		"username":  user.Username,
-		"firstName": user.FirstName,
-		"lastName":  user.LastName,
-		"email":     user.Email,
-		"role":      user.Role.Name,
-		"roleId":    user.RoleID,
-	})
+	ju := jwtUser.User{
+		ID:        user.ID,
+		CreatedAt: user.CreatedAt,
+		Username:  user.Username,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+		Role:      user.Role.Name,
+		RoleId:    user.RoleID,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: time.Now().Unix() + config.TokenDuration,
+			Issuer:    config.TokenIssuer,
+		},
+	}
+	juMap := ju.GetMap()
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, juMap)
 
 	tokenStr, err := token.SignedString([]byte(config.Secret))
 	if err != nil {

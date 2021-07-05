@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/gorilla/handlers"
@@ -22,8 +23,14 @@ func main() {
 	r := mux.NewRouter()
 	// routes
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(time.Now().String()))
+		ua := r.Header.Get("User-Agent")
+		uaRegex := regexp.MustCompile(`(curl|Postman)`)
+		if uaRegex.MatchString(ua) {
+			w.Write([]byte(time.Now().String()))
+		} else {
+			timeHtml := "<script>setInterval(function(){ document.getElementById(\"time\").innerHTML = new Date()}, 1000)</script><p id=\"time\">loading...</p>"
+			w.Write([]byte(timeHtml))
+		}
 	})
 	routes.Init(r)
 

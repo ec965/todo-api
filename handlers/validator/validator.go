@@ -8,6 +8,11 @@ import (
 	"github.com/go-playground/validator"
 )
 
+type FormError struct {
+	Error string `json:"error"`
+	Fields map[string]string `json:"fields"`
+}
+
 var validate *validator.Validate
 var formDecoder *form.Decoder
 
@@ -23,12 +28,12 @@ func pascalToCamelCase(in string) string{
 }
 
 // parse form data and validate it
-// return the bad fields as a map
-func IsValid(r *http.Request, data interface{}) (map[string]string,error) {
+// return the bad fields as a FormError
+func IsValid(r *http.Request, data interface{}) (FormError,error) {
 	r.ParseForm()
 	err := formDecoder.Decode(data, r.Form)
 	if err != nil {
-		return nil, err
+		return FormError{}, err
 	}
 	err = validate.Struct(data)
 	// collect errors into a map
@@ -38,7 +43,11 @@ func IsValid(r *http.Request, data interface{}) (map[string]string,error) {
 			key := pascalToCamelCase(fieldErr.Field())
 			errMap[key] = fieldErr.ActualTag()
 		}
-		return errMap, err
+		errJson := FormError{
+			Error: "validation error",
+			Fields: errMap,
+		}
+		return errJson, err
 	}
-	return nil, nil
+	return FormError{}, nil
 }

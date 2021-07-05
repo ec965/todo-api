@@ -26,8 +26,7 @@ func Init() {
 	resetDB(&User{}, &Role{})
 
 	// create roles
-	admin := CreateRoleIfNotExist("admin")
-	CreateRoleIfNotExist("user")
+	roles := createRoles()
 	// create admin user
 	CreateUserIfNotExist(User{
 		FirstName: "admin",
@@ -35,6 +34,6 @@ func Init() {
 		Username:  config.AdminUser,
 		Password:  config.AdminPass,
 		Email:     "adminEmail",
-		Role:      admin,
+		Role:      roles.Admin,
 	})
 }

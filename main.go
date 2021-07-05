@@ -1,11 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"time"
-	"fmt"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -20,7 +20,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 }
 
 func contentTypeMiddleWare(next http.Handler) http.Handler {
-	return handlers.ContentTypeHandler(next)
+	return handlers.ContentTypeHandler(next, "application/x-www-form-urlencoded", "application/json")
 }
 
 func main() {
@@ -32,22 +32,21 @@ func main() {
 	r.Use(loggingMiddleware)
 	r.Use(contentTypeMiddleWare)
 	// routes
-	r.HandleFunc("/", func (w http.ResponseWriter, r *http.Request) {
+	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(time.Now().String()))
 	})
 	routes.Init(r)
 
-
 	// application middleware
 	var app http.Handler = r
-	app = handlers.CORS()(app);
+	app = handlers.CORS()(app)
 	app = handlers.RecoveryHandler()(app)
 
 	s := &http.Server{
-		Addr: ":"+config.Port,
-		Handler: app,
-		ReadTimeout: 10 * time.Second,
+		Addr:         ":" + config.Port,
+		Handler:      app,
+		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
 	fmt.Println("Serving on", s.Addr)

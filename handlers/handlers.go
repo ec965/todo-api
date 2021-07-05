@@ -2,21 +2,29 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
-	// "gopkg.in/go-playground/validator.v8"
+	"gopkg.in/go-playground/validator.v8"
 
 	res "github.com/ec965/todo-api/handlers/response"
 	"github.com/ec965/todo-api/models"
 )
 
+var validate *validator.Validate
+
+func init() {
+	config := &validator.Config{TagName: "validate"}
+	validate = validator.New(config)
+}
+
 type NewUser struct {
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Username  string `json:"username"`
-	Password  string `json:"password"`
-	Email     string `json:"email"`
-	Role      string `json:"role"`
+	FirstName string `json:"firstName" validate:"required"`
+	LastName  string `json:"lastName" validate:"required"`
+	Username  string `json:"username" validate:"required"`
+	Password  string `json:"password" validate:"required"`
+	Email     string `json:"email" validate:"required,email"`
+	Role      string `json:"role" validate:"required"`
 }
 
 func CreateUser(w http.ResponseWriter, r *http.Request) {
@@ -25,6 +33,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		res.Status(http.StatusBadRequest).Json(res.Error{Error: "invalid json"}).Send(w)
+		return
+	}
+	fmt.Println(nu)
+
+	errs := validate.Struct(nu)
+
+	if errs != nil {
+		res.Status(http.StatusBadRequest).Json(errs).Send(w)
 		return
 	}
 

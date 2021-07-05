@@ -1,50 +1,29 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 
-	"github.com/go-playground/form/v4"
-	"gopkg.in/go-playground/validator.v8"
-
 	res "github.com/ec965/todo-api/handlers/response"
+	"github.com/ec965/todo-api/handlers/validator"
 	"github.com/ec965/todo-api/models"
 )
 
-var validate *validator.Validate
-var formDecoder *form.Decoder
-
-func init() {
-	config := &validator.Config{TagName: "validate"}
-	validate = validator.New(config)
-	formDecoder = form.NewDecoder()
+type login struct {
+	Password string `form:"password" validate:"required,max=36,min=6"`
+	Username string `form:"username" validate:"required,max=36"`
 }
 
 // create a new user
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+	// parse form
 	newUser := struct {
 		FirstName string `form:"firstName" validate:"required,max=64"`
 		LastName  string `form:"lastName" validate:"required,max=64"`
-		Username  string `form:"username" validate:"required,max=36"`
-		Password  string `form:"password" validate:"required,max=36,min=6"`
 		Email     string `form:"email" validate:"required,email"`
 		Role      string `form:"role" validate:"required,eq=user|eq=admin"` // maybe validate this against the db
+		login
 	}{}
-	err := formDecoder.Decode(&newUser, r.Form)
-
-	if err != nil {
-		errJson := res.Error("invalid form")
-		res.Status(http.StatusBadRequest).Json(errJson).Send(w)
-		return
-	}
-	fmt.Println(newUser)
-
-	err = validate.Struct(newUser)
-
-	if err != nil {
-		fmt.Println(err)
-		res.Status(http.StatusBadRequest).Json(err).Send(w)
+	if !validator.IsValid(w, r, &newUser) {
 		return
 	}
 
@@ -56,6 +35,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// create the new user
 	user := models.User{
 		FirstName: newUser.FirstName,
 		LastName:  newUser.LastName,
@@ -67,6 +47,17 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	models.Db.Create(&user)
 
 	res.Status(http.StatusOK).Send(w)
+}
+
+func Login(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	l := login{}
+	if !validator.IsValid(w, r, &l) {
+		return
+	}
+
+	user := models.User{}
+	models.Db.Where("username = ?", l.Username).First(&user)
 }
 
 func Ping(w http.ResponseWriter, r *http.Request) {

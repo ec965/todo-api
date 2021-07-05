@@ -2,11 +2,18 @@ package routes
 
 import (
 	"github.com/gorilla/mux"
+
 	"github.com/ec965/todo-api/handlers"
 )
 
-func Init(r *mux.Router){
-	api := r.PathPrefix("/api").Subrouter()
-	api.HandleFunc("/user", handlers.CreateUser).Methods("POST")
-	api.HandleFunc("/ping", handlers.Ping).Methods("GET")
+
+func Init(r *mux.Router) {
+	private := r.PathPrefix("/api").Subrouter()
+	private.Use(handlers.JwtMiddleWare)
+	private.HandleFunc("/ping", handlers.Ping).Methods("GET")
+
+	// auth does not require a token
+	auth := r.PathPrefix("/api/auth").Subrouter()
+	auth.HandleFunc("/user", handlers.CreateUser).Methods("POST")
+	auth.HandleFunc("/ping", handlers.Ping).Methods("GET")
 }

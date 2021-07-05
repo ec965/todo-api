@@ -8,14 +8,15 @@ import (
 )
 
 func Init(r *mux.Router) {
-	private := r.PathPrefix("/api").Subrouter()
+	api := r.PathPrefix("/api").Subrouter()
+
+	private := api.PathPrefix("/private").Subrouter()
 	private.Use(middleware.Jwt)
 	private.HandleFunc("/ping", handlers.Ping).Methods("GET")
 
 	// auth does not require a token
-	auth := r.PathPrefix("/api/auth").Subrouter()
+	auth := api.PathPrefix("/auth").Subrouter()
 	auth.HandleFunc("/user", handlers.CreateUser).Methods("POST")
 	auth.HandleFunc("/login", handlers.Login).Methods("POST")
 	auth.HandleFunc("/ping", handlers.Ping).Methods("GET")
-
 }

@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"net/http"
 	"fmt"
+	"net/http"
 
 	"github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/bcrypt"
@@ -28,7 +28,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		Role      string `form:"role" validate:"required,eq=user|eq=admin"` // maybe validate this against the db
 		login
 	}{}
-	if !validator.IsValid(w, r, &newUser) {
+	if errMap, err := validator.IsValid(r, &newUser); err != nil {
+		res.Status(http.StatusBadRequest).Json(errMap).Send(w)
 		return
 	}
 
@@ -60,13 +61,14 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	l := login{}
 	// parse form and validate fields
-	if !validator.IsValid(w, r, &l) {
+	if errMap, err := validator.IsValid(r, &l); err != nil {
+		res.Status(http.StatusBadRequest).Json(errMap).Send(w)
 		return
 	}
 
 	// find user
 	user := models.User{}
-	models.Db.Where("username = ?", l.Username).First(&user)
+	models.Db.Where("username = ?", l.Username).Preload("Role").First(&user)
 	// check if user in db
 	if user == (models.User{}) {
 		res.Status(http.StatusNotFound).Json(res.Error("user not found")).Send(w)
@@ -87,9 +89,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		"lastName":  user.LastName,
 		"email":     user.Email,
 		"role":      user.Role.Name,
+		"roleId":    user.RoleID,
 	})
 
-	tokenStr, err := token.SignedString(config.Secret)
+	tokenStr, err := token.SignedString([]byte(config.Secret))
 	if err != nil {
 		panic(err)
 	}

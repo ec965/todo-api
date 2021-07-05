@@ -32,7 +32,7 @@ func main() {
 	app = handlers.ContentTypeHandler(app, "application/x-www-form-urlencoded", "application/json")
 	app = handlers.LoggingHandler(os.Stdout, app)
 	app = handlers.CORS()(app)
-	app = handlers.RecoveryHandler()(app)
+	// app = handlers.RecoveryHandler()(app)
 
 	s := &http.Server{
 		Addr:         ":" + config.Port,

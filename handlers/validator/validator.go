@@ -2,54 +2,43 @@ package validator
 
 import (
 	"net/http"
-	"fmt"
+	"strings"
 
 	"github.com/go-playground/form/v4"
-	"gopkg.in/go-playground/validator.v8"
-
-	res "github.com/ec965/todo-api/handlers/response"
+	"github.com/go-playground/validator"
 )
 
 var validate *validator.Validate
 var formDecoder *form.Decoder
 
 func init() {
-	config := &validator.Config{TagName: "validate"}
-	validate = validator.New(config)
+	validate = validator.New()
 	formDecoder = form.NewDecoder()
 }
 
-// TODO: fix reflection errors, can't use generic interface{}
-func isValidForm(w http.ResponseWriter, r *http.Request, form interface{}) bool {
+func pascalToCamelCase(in string) string{
+	f := strings.ToLower(string(in[0]))
+	r := string(in[1:])
+	return f+r
+}
+
+// parse form data and validate it
+// return the bad fields as a map
+func IsValid(r *http.Request, data interface{}) (map[string]string,error) {
 	r.ParseForm()
-	err := formDecoder.Decode(form, r.Form)
+	err := formDecoder.Decode(data, r.Form)
 	if err != nil {
-		errJson := res.Error("invalid form")
-		res.Status(http.StatusBadRequest).Json(errJson).Send(w)
-		return false
+		return nil, err
 	}
-	return true
-}
-
-func isValidData(w http.ResponseWriter, r * http.Request, data interface{}) bool {
-	err := validate.Struct(data)
+	err = validate.Struct(data)
+	// collect errors into a map
 	if err != nil {
-		// TODO: fix this error json
-		fmt.Println(err)
-		res.Status(http.StatusBadRequest).Json(err).Send(w)
-		return false
+		errMap := make(map[string]string)
+		for _, fieldErr := range err.(validator.ValidationErrors) {
+			key := pascalToCamelCase(fieldErr.Field())
+			errMap[key] = fieldErr.ActualTag()
+		}
+		return errMap, err
 	}
-	return true
-}
-
-func IsValid(w http.ResponseWriter, r *http.Request, data interface{})bool {
-	if(!isValidForm(w, r, &data)){
-		fmt.Println("invalid form")
-		return false
-	}
-	if(!isValidData(w, r, &data)){
-		fmt.Println("invalid data")
-		return false
-	}
-	return true
+	return nil, nil
 }

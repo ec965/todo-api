@@ -1,34 +1,21 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"database/sql"
+	"context"
+	"time"
+
+	_ "github.com/jackc/pgx/v4/stdlib"
+)
 
 type Role struct {
-	gorm.Model
-	Name string `gorm:"uniqueIndex:idx_name"`
+	ID int `json:"id"`
+	Name string `json:"name"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-type roles struct {
-	Admin Role
-	User  Role
-}
-
-func FindRoleByName(n string) Role {
-	role := Role{}
-	Db.Where("name = ?", n).Find(&role)
-	return role
-}
-
-func createRoleIfNotExist(n string) Role {
-	r := FindRoleByName(n)
-	if r == (Role{}) {
-		r = Role{Name: n}
-		Db.Create(&r)
-	}
-	return r
-}
-
-func createRoles() roles {
-	admin := createRoleIfNotExist("admin")
-	user := createRoleIfNotExist("user")
-	return roles{Admin: admin, User: user}
+func (r *Role) Insert(ctx context.Context) (sql.Result, error){
+	result, err := db.ExecContext(ctx, "INSERT INTO roles (name) VALUES ( $1 )", r.Name)
+	return result, err 
 }

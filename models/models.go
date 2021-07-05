@@ -2,38 +2,48 @@ package models
 
 import (
 	"log"
+	"database/sql"
+	"context"
+	"fmt"
+	"time"
 
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
+	_ "github.com/jackc/pgx/v4/stdlib"
 
 	"github.com/ec965/todo-api/config"
 )
 
-var Db *gorm.DB
-
-func resetDB(dst ...interface{}) {
-	Db.Migrator().DropTable(dst...)
-	Db.AutoMigrate(dst...)
+type model interface {
+	Insert() interface{}
+	Select() interface{}
+	Update() interface{}
+	Delete() interface{}
 }
 
+var db *sql.DB
+var ctx context.Context
+
 func Init() {
+	ctx = context.Background()
+	ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
+	defer cancel()
+
 	var err error
-	Db, err = gorm.Open(sqlite.Open(config.DbName), &gorm.Config{})
+	db, err = sql.Open("pgx", config.DatabaseUrl)
 	if err != nil {
 		log.Fatal("Database connection error:", err)
 	}
+	defer db.Close()
 
-	resetDB(&User{}, &Role{})
+	err = db.Ping()
+	if err != nil {
+		log.Fatal("Unable to ping the Database:", err)
+	}
 
-	// create default roles
-	roles := createRoles()
-	// create admin user
-	CreateUserIfNotExist(User{
-		FirstName: "admin",
-		LastName:  "user",
-		Username:  config.AdminUser,
-		Password:  config.AdminPass,
-		Email:     "adminEmail",
-		Role:      roles.Admin,
-	})
+	r := &Role{Name: "user"}
+	result, err := r.Insert(ctx)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		fmt.Println(result)
+	}
 }

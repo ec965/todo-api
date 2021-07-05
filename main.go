@@ -15,12 +15,6 @@ import (
 	"github.com/ec965/todo-api/routes"
 )
 
-func DefaultHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(time.Now().String()))
-}
-
-
 func loggingMiddleware(next http.Handler) http.Handler {
 	return handlers.LoggingHandler(os.Stdout, next)
 }
@@ -38,7 +32,10 @@ func main() {
 	r.Use(loggingMiddleware)
 	r.Use(contentTypeMiddleWare)
 	// routes
-	r.HandleFunc("/", DefaultHandler)
+	r.HandleFunc("/", func (w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(time.Now().String()))
+	})
 	routes.Init(r)
 
 

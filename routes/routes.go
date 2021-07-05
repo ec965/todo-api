@@ -7,5 +7,6 @@ import (
 
 func Init(r *mux.Router){
 	api := r.PathPrefix("/api").Subrouter()
-	api.HandleFunc("", handlers.ApiHandler)
+	api.HandleFunc("/user", handlers.CreateUser).Methods("POST")
+	api.HandleFunc("/ping", handlers.Ping).Methods("GET")
 }

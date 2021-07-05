@@ -9,16 +9,16 @@ import (
 	"github.com/ec965/todo-api/config"
 )
 
-var db *gorm.DB
+var Db *gorm.DB
 
 func resetDB(dst ...interface{}) {
-	db.Migrator().DropTable(dst...)
-	db.AutoMigrate(dst...)
+	Db.Migrator().DropTable(dst...)
+	Db.AutoMigrate(dst...)
 }
 
 func Init() {
 	var err error
-	db, err = gorm.Open(sqlite.Open(config.DbName), &gorm.Config{})
+	Db, err = gorm.Open(sqlite.Open(config.DbName), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Database connection error:", err)
 	}

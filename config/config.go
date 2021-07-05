@@ -10,6 +10,7 @@ var AdminUser string
 var AdminPass string
 var Port string
 var DbName string
+var Secret string
 
 func envFallback(key string, fallback string) string {
 	value := os.Getenv(key)
@@ -30,4 +31,5 @@ func init() {
 	AdminPass = envFallback("ADMIN_PASS", "test123")
 	Port = envFallback("PORT", "8080")
 	DbName = envFallback("DB_NAME", "todo.db")
+	Secret = envFallback("SECRET", "very-secret")
 }

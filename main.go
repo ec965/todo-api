@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/auth0/go-jwt-middleware"
+	"github.com/form3tech-oss/jwt-go"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
@@ -23,6 +25,15 @@ func contentTypeMiddleWare(next http.Handler) http.Handler {
 	return handlers.ContentTypeHandler(next, "application/x-www-form-urlencoded", "application/json")
 }
 
+func jwtMiddleWare(next http.Handler) http.Handler {
+	return jwtmiddleware.New(jwtmiddleware.Options{
+		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+			return []byte(config.Secret), nil
+		},
+		SigningMethod: jwt.SigningMethodHS256,
+	}).Handler(next)
+}
+
 func main() {
 	// database
 	models.Init()
@@ -31,6 +42,7 @@ func main() {
 	// router middleware
 	r.Use(loggingMiddleware)
 	r.Use(contentTypeMiddleWare)
+	r.Use(jwtMiddleWare)
 	// routes
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)

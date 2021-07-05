@@ -20,6 +20,7 @@ func init() {
 	formDecoder = form.NewDecoder()
 }
 
+// create a new user
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	newUser := struct {
@@ -47,6 +48,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// get the user's role
 	role := models.FindRoleByName(newUser.Role)
 	if role == (models.Role{}) {
 		errJson := res.Error("invalid role")

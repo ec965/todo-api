@@ -51,7 +51,7 @@ func Status(status int) *response {
 	return &response{Status: status}
 }
 
-func Error(err string)ErrorJson{
+func Error(err string) ErrorJson {
 	return ErrorJson{Error: err}
 }
 

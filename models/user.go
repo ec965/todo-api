@@ -37,7 +37,7 @@ func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 }
 
 func (u *User) BeforeUpdate(tx *gorm.DB) (err error) {
-	if tx.Statement.Changed("Password"){
+	if tx.Statement.Changed("Password") {
 		u.Password, err = hashPassword(u.Password)
 	}
 	return

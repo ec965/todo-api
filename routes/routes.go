@@ -6,7 +6,6 @@ import (
 	"github.com/ec965/todo-api/handlers"
 )
 
-
 func Init(r *mux.Router) {
 	private := r.PathPrefix("/api").Subrouter()
 	private.Use(handlers.JwtMiddleWare)

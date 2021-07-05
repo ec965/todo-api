@@ -19,6 +19,7 @@ type login struct {
 }
 
 // create a new user
+// returns status OK
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 	// parse form
 	newUser := struct {
@@ -57,6 +58,8 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	res.Status(http.StatusOK).Send(w)
 }
 
+// login the user
+// returns the JWToken
 func Login(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	l := login{}

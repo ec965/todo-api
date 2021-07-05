@@ -26,7 +26,6 @@ func init() {
 		log.Fatal("Error loading .env file:", err)
 	}
 
-
 	AdminUser = envFallback("ADMIN_USER", "admin")
 	AdminPass = envFallback("ADMIN_PASS", "test123")
 	Port = envFallback("PORT", "8080")

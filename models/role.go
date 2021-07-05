@@ -9,7 +9,7 @@ type Role struct {
 
 type roles struct {
 	Admin Role
-	User Role
+	User  Role
 }
 
 func FindRoleByName(n string) Role {
@@ -27,8 +27,8 @@ func createRoleIfNotExist(n string) Role {
 	return r
 }
 
-func createRoles() roles{
+func createRoles() roles {
 	admin := createRoleIfNotExist("admin")
 	user := createRoleIfNotExist("user")
-	return roles{Admin: admin, User:user}
+	return roles{Admin: admin, User: user}
 }

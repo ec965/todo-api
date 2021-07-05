@@ -9,7 +9,7 @@ import (
 )
 
 type FormError struct {
-	Error string `json:"error"`
+	Error  string            `json:"error"`
 	Fields map[string]string `json:"fields"`
 }
 
@@ -21,15 +21,15 @@ func init() {
 	formDecoder = form.NewDecoder()
 }
 
-func pascalToCamelCase(in string) string{
+func pascalToCamelCase(in string) string {
 	f := strings.ToLower(string(in[0]))
 	r := string(in[1:])
-	return f+r
+	return f + r
 }
 
 // parse form data and validate it
 // return the bad fields as a FormError
-func IsValid(r *http.Request, data interface{}) (FormError,error) {
+func IsValid(r *http.Request, data interface{}) (FormError, error) {
 	r.ParseForm()
 	err := formDecoder.Decode(data, r.Form)
 	if err != nil {
@@ -44,7 +44,7 @@ func IsValid(r *http.Request, data interface{}) (FormError,error) {
 			errMap[key] = fieldErr.ActualTag()
 		}
 		errJson := FormError{
-			Error: "validation error",
+			Error:  "validation error",
 			Fields: errMap,
 		}
 		return errJson, err

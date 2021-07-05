@@ -3,9 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strings"
-
 	// "github.com/dgrijalva/jwt-go"
-
 	// "github.com/ec965/todo-api/config"
 	// res "github.com/ec965/todo-api/handlers/response"
 )
@@ -27,6 +25,6 @@ func JwtMiddleWare(next http.Handler) http.Handler {
 
 		// TODO: parse out the JWT into a struct
 
-		next.ServeHTTP(w,r)
+		next.ServeHTTP(w, r)
 	})
 }

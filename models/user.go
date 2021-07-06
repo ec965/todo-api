@@ -10,9 +10,9 @@ import (
 )
 
 type User struct {
-	ID        int64     `json:"id" dbomit:"insert"`
-	CreatedAt time.Time `json:"createdAt" dbomit:"insert"`
-	UpdatedAt time.Time `json:"updatedAt" dbomit:"insert"`
+	ID        int64     `json:"id" db:"auto"`
+	CreatedAt time.Time `json:"createdAt" db:"auto"`
+	UpdatedAt time.Time `json:"updatedAt" db:"auto"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	Password  string    `json:"-"`
@@ -43,7 +43,7 @@ func (u *User) InsertContext(ctx context.Context) (int64, error) {
 func (u *User) Insert(ctx context.Context) (int64, error) {
 	u.beforeInsert()
 	id, err := Insert(u)
-	return id,err
+	return id, err
 }
 
 func (u *User) SelectById(id int64) error {

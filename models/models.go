@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"log"
 
-
 	_ "github.com/jackc/pgx/v4/stdlib"
 
 	"github.com/ec965/todo-api/config"
@@ -17,21 +16,16 @@ type model interface {
 	// Update()
 	// UpdateContext()
 	// Delete()
-	// DeleteContext() 
+	// DeleteContext()
 }
 
 // used to omit a field from it's respective database actions
 // actions: insert, update
-const dbomitTag = "dbomit"
+const dbTag= "db"
 
 var db *sql.DB
-// var ctx context.Context
 
 func Init() {
-	// ctx = context.Background()
-	// ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
-	// defer cancel()
-
 	var err error
 	db, err = sql.Open("pgx", config.DatabaseUrl)
 	if err != nil {
@@ -45,5 +39,6 @@ func Init() {
 	}
 
 	r := Role{}
+	r.Insert()
 	r.SelectById(1)
 }

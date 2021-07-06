@@ -7,22 +7,18 @@ import (
 )
 
 type Role struct {
-	ID        int64     `json:"id" dbomit:"insert"`
-	CreatedAt time.Time `json:"createdAt" dbomit:"insert"`
-	UpdatedAt time.Time `json:"updatedAt" dbomit:"insert"`
+	ID        int64     `json:"id" db:"auto"`
+	CreatedAt time.Time `json:"createdAt" db:"auto"`
+	UpdatedAt time.Time `json:"updatedAt" db:"auto"`
 	Name      string    `json:"name"`
 }
 
-func (r Role) Insert() error {
-	id, err := Insert(r)
-	if err != nil {
-		return err
-	}
-	r.SelectById(id)
+func (r *Role) Insert() error {
+	_, err := Insert(r)
 	return err
 }
 
-func (r Role) InsertContext(ctx context.Context) error {
+func (r *Role) InsertContext(ctx context.Context) error {
 	_, err := InsertContext(ctx, r)
 	return err
 }

@@ -2,20 +2,48 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"time"
-	"database/sql"
-
-	_ "github.com/jackc/pgx/v4/stdlib"
 )
 
 type Role struct {
-	ID        int       `json:"id"`
+	ID        int64     `json:"id" dbomit:"insert"`
+	CreatedAt time.Time `json:"createdAt" dbomit:"insert"`
+	UpdatedAt time.Time `json:"updatedAt" dbomit:"insert"`
 	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
 }
 
-func (r *Role) Insert(ctx context.Context) (sql.Result, error) {
-	result, err := db.ExecContext(ctx, "INSERT INTO roles (name) VALUES ( $1 )", r.Name)
-	return result, err
+func (r Role) Insert() error {
+	id, err := Insert(r)
+	if err != nil {
+		return err
+	}
+	r.SelectById(id)
+	return err
+}
+
+func (r Role) InsertContext(ctx context.Context) error {
+	_, err := InsertContext(ctx, r)
+	return err
+}
+
+func (r *Role) SelectById(id int64) error {
+	rows, err := db.Query("SELECT * FROM roles WHERE id = $1 LIMIT 1", id)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		fmt.Println(rows.Columns())
+		fmt.Println(rows.ColumnTypes())
+		var one interface{}
+		var two interface{}
+		var three interface{}
+		var four interface{}
+		rows.Scan(&one, &two, &three, &four)
+		fmt.Println(one, two, three, four)
+	}
+	err = rows.Err()
+	return err
 }

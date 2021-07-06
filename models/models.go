@@ -1,11 +1,9 @@
 package models
 
 import (
-	"context"
 	"database/sql"
-	"fmt"
 	"log"
-	"time"
+
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 
@@ -13,19 +11,26 @@ import (
 )
 
 type model interface {
-	Insert() interface{}
-	Select() interface{}
-	Update() interface{}
-	Delete() interface{}
+	Insert() (sql.Result, error)
+	InsertContext()
+	SelectById()
+	// Update()
+	// UpdateContext()
+	// Delete()
+	// DeleteContext() 
 }
 
+// used to omit a field from it's respective database actions
+// actions: insert, update
+const dbomitTag = "dbomit"
+
 var db *sql.DB
-var ctx context.Context
+// var ctx context.Context
 
 func Init() {
-	ctx = context.Background()
-	ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
-	defer cancel()
+	// ctx = context.Background()
+	// ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
+	// defer cancel()
 
 	var err error
 	db, err = sql.Open("pgx", config.DatabaseUrl)
@@ -39,11 +44,6 @@ func Init() {
 		log.Fatal("Unable to ping the Database:", err)
 	}
 
-	r := &Role{Name: "user"}
-	result, err := r.Insert(ctx)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		fmt.Println(result)
-	}
+	r := Role{}
+	r.SelectById(1)
 }

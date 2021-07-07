@@ -5,16 +5,16 @@ import (
 	"net/http"
 )
 
-type contextKey string
+type ContextKey string
 
-func (c contextKey) String() string {
+func (c ContextKey) String() string {
 	return "todo-api ctx key " + string(c)
 }
 
 const (
-	CtxUser = contextKey("user")
+	CtxUser = ContextKey("user")
 )
 
-func AddRequestContext(r *http.Request, key contextKey, value interface{}) *http.Request {
+func AddRequestContext(r *http.Request, key ContextKey, value interface{}) *http.Request {
 	return r.WithContext(context.WithValue(r.Context(), key, value))
 }

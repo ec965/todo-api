@@ -83,7 +83,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 // login the user
 // returns the JWToken
-func Login(w http.ResponseWriter, r *http.Request){
+func Login(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	l := struct {
 		Password string `form:"password" validate:"required,max=36,min=6"`

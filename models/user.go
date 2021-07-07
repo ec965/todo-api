@@ -1,102 +1,116 @@
 package models
 
 import (
-	"context"
-	"fmt"
+	"errors"
 	"log"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
+const usersTable = "users"
+
 type User struct {
-	ID        int64     `json:"id" db:"auto"`
-	CreatedAt time.Time `json:"createdAt" db:"auto"`
-	UpdatedAt time.Time `json:"updatedAt" db:"auto"`
+	ID        int64     `json:"id"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
 	Password  string    `json:"-"`
 	FirstName string    `json:"firstName"`
 	LastName  string    `json:"lastName"`
-	RoleId    int       `json:"roleId"`
+	RoleId    int64     `json:"roleId"`
 }
 
-func hashPassword(pw string) (string, error) {
+func hashPassword(pw string) string {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
-	return string(hash), err
-}
-
-func (u *User) beforeInsert() {
-	var err error
-	u.Password, err = hashPassword(u.Password)
 	if err != nil {
 		log.Fatal("Failed to hash password")
 	}
+	return string(hash)
 }
 
-func (u *User) InsertContext(ctx context.Context) (int64, error) {
-	u.beforeInsert()
-	id, err := InsertContext(ctx, u)
-	return id, err
-}
+func (u *User) Insert() int {
+	ut := table{usersTable, []string{"username", "email", "password", "first_name", "last_name", "role_id"}}
 
-func (u *User) Insert(ctx context.Context) (int64, error) {
-	u.beforeInsert()
-	id, err := Insert(u)
-	return id, err
-}
+	u.Password = hashPassword(u.Password)
+	var id int
+	err := db.QueryRow(
+		ut.insertStr(),
+		u.Username, u.Email, u.Password, u.FirstName, u.LastName, u.RoleId,
+	).Scan(&id)
 
-func (u *User) SelectById(id int64) error {
-	rows, err := db.Query("SELECT * FROM users WHERE id = $1 LIMIT 1", id)
 	if err != nil {
-		return err
+		log.Fatal(err)
+	}
+
+	return id
+}
+
+func (u *User) Update(hashPw bool) error {
+	ut := table{usersTable, []string{"username", "email", "password", "first_name", "last_name", "role_id"}}
+	if u.ID == 0 {
+		return errors.New("User ID is null, cannot update user")
+	}
+	if hashPw {
+		u.Password = hashPassword(u.Password)
+	}
+	_, err := db.Exec(ut.updateStr(), u.Username, u.Email, u.Password, u.FirstName, u.LastName, u.RoleId, u.ID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return nil
+}
+
+func (u *User) SelectById(id int) {
+	ut := table{usersTable, []string{"id", "created_at", "updated_at", "username", "email", "password", "first_name", "last_name", "role_id"}}
+	err := db.QueryRow(ut.selectByStr("id"), id).Scan(
+		u.ID, u.CreatedAt, u.UpdatedAt, u.Username, u.Email, u.Password, u.FirstName, u.LastName, u.RoleId,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (u *User) SelectByUsername(username string){
+	ut := table{usersTable, []string{"id", "created_at", "updated_at", "username", "email", "password", "first_name", "last_name", "role_id"}}
+	err := db.QueryRow(ut.selectByStr("username"), username).Scan(
+		u.ID, u.CreatedAt, u.UpdatedAt, u.Username, u.Email, u.Password, u.FirstName, u.LastName, u.RoleId,
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func (u User) CheckUsernameEmail(qUsername string, qEmail string) (bool, bool) {
+	rows, err := db.Query("SELECT username, email WHERE username = $1, email = $2", qUsername, qEmail)
+	if err != nil {
+		log.Fatal(err)
 	}
 	defer rows.Close()
 
+	hasUsername := false
+	hasEmail := false
 	for rows.Next() {
-		fmt.Println(rows.Columns)
-		fmt.Println(rows.ColumnTypes)
+		var (
+			username string
+			email    string
+		)
+		if err := rows.Scan(&username, &email); err != nil {
+			log.Fatal(err)
+		}
+		if username == qUsername {
+			hasUsername = true
+		}
+		if email == qEmail {
+			hasEmail = true
+		}
+
 	}
-	err = rows.Err()
-	return err
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return hasUsername, hasEmail
+
+	// u.ID, u.CreatedAt, u.UpdatedAt, u.Username, u.Email, u.Password, u.FirstName, u.LastName, u.RoleId,
 }
-
-// func (u *User) Update(ctx context.Context) (sql.Result, error){
-// 	result, err := db.ExecContext(
-// 		ctx,
-// 		"UPDATE users (username, email, password)"
-// 	)
-// }
-
-// type User struct {
-// 	gorm.Model
-// 	FirstName string
-// 	LastName  string
-// 	Username  string `gorm:"uniqueIndex:idx_username"`
-// 	Password  string
-// 	Email     string `gorm:"index:uniqueIndex:idx_email"`
-// 	RoleID    uint
-// 	Role      Role
-// }
-
-// func CreateUserIfNotExist(u User) User {
-// 	existingUser := User{}
-// 	Db.Where("username = ?", u.Username).Find(existingUser)
-// 	if existingUser == (User{}) {
-// 		Db.Create(&u)
-// 		return u
-// 	}
-// 	return existingUser
-// }
-
-// func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
-// 	u.Password, err = hashPassword(u.Password)
-// 	return
-// }
-
-// func (u *User) BeforeUpdate(tx *gorm.DB) (err error) {
-// 	if tx.Statement.Changed("Password") {
-// 		u.Password, err = hashPassword(u.Password)
-// 	}
-// 	return
-// }

@@ -47,11 +47,11 @@ func GetTasks(w http.ResponseWriter, r *http.Request) {
 	sendJson(w, tasks)
 }
 
-func UpdateTasks(w http.ResponseWriter, r *http.Request) {
-	user, err := getUser(r)
-	if err != nil {
-		sendError(w, err)
-		return
-	}
+// func UpdateTasks(w http.ResponseWriter, r *http.Request) {
+// 	user, err := getUser(r)
+// 	if err != nil {
+// 		sendError(w, err)
+// 		return
+// 	}
 
-}
+// }

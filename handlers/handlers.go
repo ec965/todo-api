@@ -44,3 +44,7 @@ func sendText(w http.ResponseWriter, t string) {
 	w.Header().Set("Content-Type", ContentTypeText)
 	w.Write([]byte(t))
 }
+
+func sendError(w http.ResponseWriter, err error){
+	http.Error(w, err.Error(), http.StatusInternalServerError)
+}

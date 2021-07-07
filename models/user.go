@@ -25,12 +25,12 @@ type User struct {
 func hashPassword(pw string) string {
 	hash, err := bcrypt.GenerateFromPassword([]byte(pw), bcrypt.DefaultCost)
 	if err != nil {
-		log.Fatal("Failed to hash password")
+		log.Fatal("At model.hashPassword: Failed to hash password")
 	}
 	return string(hash)
 }
 
-func (u *User) Insert() int {
+func (u *User) Insert() (int, error) {
 	ut := table{usersTable, []string{"username", "email", "password", "first_name", "last_name", "role_id"}}
 
 	u.Password = hashPassword(u.Password)
@@ -41,10 +41,10 @@ func (u *User) Insert() int {
 	).Scan(&id)
 
 	if err != nil {
-		log.Fatal(err)
+		return 0, err
 	}
 
-	return id
+	return id, nil
 }
 
 func (u *User) Update(hashPw bool) error {
@@ -55,37 +55,39 @@ func (u *User) Update(hashPw bool) error {
 	if hashPw {
 		u.Password = hashPassword(u.Password)
 	}
-	_, err := db.Exec(ut.updateStr(), u.Username, u.Email, u.Password, u.FirstName, u.LastName, u.RoleId, u.ID)
+	_, err := db.Exec(ut.updateStr(), &u.Username, &u.Email, &u.Password, &u.FirstName, &u.LastName, &u.RoleId, &u.ID)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	return nil
 }
 
-func (u *User) SelectById(id int) {
+func (u *User) SelectById(id int) error {
 	ut := table{usersTable, []string{"id", "created_at", "updated_at", "username", "email", "password", "first_name", "last_name", "role_id"}}
 	err := db.QueryRow(ut.selectByStr("id"), id).Scan(
 		u.ID, u.CreatedAt, u.UpdatedAt, u.Username, u.Email, u.Password, u.FirstName, u.LastName, u.RoleId,
 	)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }
 
-func (u *User) SelectByUsername(username string) {
+func (u *User) SelectByUsername(username string) error {
 	ut := table{usersTable, []string{"id", "created_at", "updated_at", "username", "email", "password", "first_name", "last_name", "role_id"}}
 	err := db.QueryRow(ut.selectByStr("username"), username).Scan(
-		u.ID, u.CreatedAt, u.UpdatedAt, u.Username, u.Email, u.Password, u.FirstName, u.LastName, u.RoleId,
+		&u.ID, &u.CreatedAt, &u.UpdatedAt, &u.Username, &u.Email, &u.Password, &u.FirstName, &u.LastName, &u.RoleId,
 	)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }
 
-func (u User) CheckUsernameEmail(qUsername string, qEmail string) (bool, bool) {
-	rows, err := db.Query("SELECT username, email WHERE username = $1, email = $2", qUsername, qEmail)
+func (u User) CheckUsernameEmail(qUsername string, qEmail string) (bool, bool, error) {
+	rows, err := db.Query("SELECT username, email FROM users WHERE username=$1 OR email=$2", qUsername, qEmail)
 	if err != nil {
-		log.Fatal(err)
+		return false, false, err
 	}
 	defer rows.Close()
 
@@ -97,7 +99,7 @@ func (u User) CheckUsernameEmail(qUsername string, qEmail string) (bool, bool) {
 			email    string
 		)
 		if err := rows.Scan(&username, &email); err != nil {
-			log.Fatal(err)
+			return false, false, err
 		}
 		if username == qUsername {
 			hasUsername = true
@@ -110,7 +112,5 @@ func (u User) CheckUsernameEmail(qUsername string, qEmail string) (bool, bool) {
 	if err := rows.Err(); err != nil {
 		log.Fatal(err)
 	}
-	return hasUsername, hasEmail
-
-	// u.ID, u.CreatedAt, u.UpdatedAt, u.Username, u.Email, u.Password, u.FirstName, u.LastName, u.RoleId,
+	return hasUsername, hasEmail, nil
 }

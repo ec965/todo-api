@@ -32,7 +32,11 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 
 	// check if username or email already exists
 	user := models.User{}
-	hasUsername, hasEmail := user.CheckUsernameEmail(newUser.Username, newUser.Email)
+	hasUsername, hasEmail, err := user.CheckUsernameEmail(newUser.Username, newUser.Email)
+	if err != nil {
+		sendError(w, err)
+		return
+	}
 	if hasUsername || hasEmail {
 		errJson := map[string]string{"error": "invalid field"}
 		if hasEmail {
@@ -43,11 +47,16 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		}
 		sendStatus(w, http.StatusBadRequest)
 		sendJson(w, errJson)
+		return
 	}
 
 	// check the users role
 	role := models.Role{}
-	role.SelectByName(newUser.Role)
+	err = role.SelectByName(newUser.Role)
+	if err != nil {
+		sendError(w, err)
+		return
+	}
 	if role == (models.Role{}) {
 		sendStatus(w, http.StatusBadRequest)
 		sendJsonErr(w, "invalid role")
@@ -64,13 +73,17 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		RoleId:    role.ID,
 	}
 
-	user.Insert()
+	_, err = user.Insert()
+	if err != nil {
+		sendError(w, err)
+		return
+	}
 	sendJsonMsg(w, "signup successful")
 }
 
 // login the user
 // returns the JWToken
-func Login(w http.ResponseWriter, r *http.Request) {
+func Login(w http.ResponseWriter, r *http.Request){
 	r.ParseForm()
 	l := struct {
 		Password string `form:"password" validate:"required,max=36,min=6"`
@@ -85,7 +98,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// find user
 	user := models.User{}
-	user.SelectByUsername(l.Username)
+	err := user.SelectByUsername(l.Username)
+	if err != nil {
+		sendError(w, err)
+		return
+	}
 	// check if user in db
 	if user == (models.User{}) {
 		sendStatus(w, http.StatusNotFound)
@@ -93,7 +110,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// check password
-	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(l.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(l.Password))
 	if err != nil {
 		sendStatus(w, http.StatusBadRequest)
 		sendJsonErr(w, "password incorrect")

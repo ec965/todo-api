@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
-	"errors"
 
 	"github.com/ec965/todo-api/config"
 	"github.com/ec965/todo-api/models"
@@ -17,7 +17,7 @@ const (
 
 func Ping(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.Context().Value(config.CtxUser))
-	_, err:=getUser(r)
+	_, err := getUser(r)
 	if err != nil {
 		sendError(w, err)
 		return

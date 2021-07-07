@@ -73,3 +73,8 @@ func SelectTasksForUser(userId int64) ([]Task, error) {
 	}
 	return tasks, nil
 }
+
+// func (t *Task) Update() error {
+	// use query to check for ownership
+	// UPDATE table SET vars WHERE (SELECT user_id FROM owners WHERE task_id = $1)
+// }

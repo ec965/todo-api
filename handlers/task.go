@@ -3,11 +3,11 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/ec965/todo-api/models"
 	"github.com/ec965/todo-api/handlers/validator"
+	"github.com/ec965/todo-api/models"
 )
 
-func CreateTask(w http.ResponseWriter, r *http.Request){
+func CreateTask(w http.ResponseWriter, r *http.Request) {
 	user, err := getUser(r)
 	if err != nil {
 		sendError(w, err)
@@ -15,7 +15,7 @@ func CreateTask(w http.ResponseWriter, r *http.Request){
 	}
 	data := struct {
 		Title string `form:"title" validate:"required,max=64"`
-		Text string `form:"text" validate:"required,max=1024"`
+		Text  string `form:"text" validate:"required,max=1024"`
 	}{}
 	if errMap, err := validator.IsValid(r, &data); err != nil {
 		sendStatus(w, http.StatusBadRequest)
@@ -33,7 +33,7 @@ func CreateTask(w http.ResponseWriter, r *http.Request){
 	sendJson(w, task)
 }
 
-func GetTasks(w http.ResponseWriter, r *http.Request){
+func GetTasks(w http.ResponseWriter, r *http.Request) {
 	user, err := getUser(r)
 	if err != nil {
 		sendError(w, err)
@@ -43,6 +43,15 @@ func GetTasks(w http.ResponseWriter, r *http.Request){
 	if err != nil {
 		sendError(w, err)
 		return
-	}	
+	}
 	sendJson(w, tasks)
+}
+
+func UpdateTasks(w http.ResponseWriter, r *http.Request){
+	user, err := getUser(r)
+	if err != nil {
+		sendError(w, err)
+		return
+	}
+	
 }

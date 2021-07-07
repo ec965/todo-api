@@ -22,7 +22,7 @@ func TestTableUpdateStr(t *testing.T) {
 	}
 }
 
-func TestTableSelectByIdStr(t *testing.T){
+func TestTableSelectByIdStr(t *testing.T) {
 	tt := table{"test", []string{"t1", "t2", "t3"}}
 	s := tt.selectByStr("id")
 	testStr := "SELECT t1, t2, t3 FROM test WHERE id = $1"

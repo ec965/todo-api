@@ -72,7 +72,7 @@ func (u *User) SelectById(id int) {
 	}
 }
 
-func (u *User) SelectByUsername(username string){
+func (u *User) SelectByUsername(username string) {
 	ut := table{usersTable, []string{"id", "created_at", "updated_at", "username", "email", "password", "first_name", "last_name", "role_id"}}
 	err := db.QueryRow(ut.selectByStr("username"), username).Scan(
 		u.ID, u.CreatedAt, u.UpdatedAt, u.Username, u.Email, u.Password, u.FirstName, u.LastName, u.RoleId,

@@ -8,103 +8,107 @@ import (
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/ec965/todo-api/config"
-	jwtUser "github.com/ec965/todo-api/handlers/jwt"
-	res "github.com/ec965/todo-api/handlers/response"
 	"github.com/ec965/todo-api/handlers/validator"
 	"github.com/ec965/todo-api/models"
 )
 
-type login struct {
-	Password string `form:"password" validate:"required,max=36,min=6"`
-	Username string `form:"username" validate:"required,max=36"`
-}
-
 // create a new user
 // returns status OK
-func CreateUser(w http.ResponseWriter, r *http.Request) {
+func Signup(w http.ResponseWriter, r *http.Request) {
 	// parse form
 	newUser := struct {
 		FirstName string `form:"firstName" validate:"required,max=64"`
 		LastName  string `form:"lastName" validate:"required,max=64"`
 		Email     string `form:"email" validate:"required,email"`
 		Role      string `form:"role" validate:"required,eq=user|eq=admin"` // maybe validate this against the db
-		login
+		Password  string `form:"password" validate:"required,max=36,min=6"`
+		Username  string `form:"username" validate:"required,max=36"`
 	}{}
 	if errMap, err := validator.IsValid(r, &newUser); err != nil {
-		res.Status(http.StatusBadRequest).Json(errMap).Send(w)
+		sendStatus(w, http.StatusBadRequest)
+		sendJson(w, errMap)
 		return
 	}
 
-	// get the user's role
-	role := models.FindRoleByName(newUser.Role)
+	// check if username or email already exists
+	user := models.User{}
+	hasUsername, hasEmail := user.CheckUsernameEmail(newUser.Username, newUser.Email)
+	if hasUsername || hasEmail {
+		errJson := map[string]string{"error": "invalid field"}
+		if hasEmail {
+			errJson["email"] = "exists"
+		}
+		if hasUsername {
+			errJson["username"] = "exists"
+		}
+		sendStatus(w, http.StatusBadRequest)
+		sendJson(w, errJson)
+	}
+
+	// check the users role
+	role := models.Role{}
+	role.SelectByName(newUser.Role)
 	if role == (models.Role{}) {
-		errJson := res.Error("invalid role")
-		res.Status(http.StatusBadRequest).Json(errJson).Send(w)
+		sendStatus(w, http.StatusBadRequest)
+		sendJsonErr(w, "invalid role")
 		return
 	}
 
 	// create the new user
-	user := models.User{
+	user = models.User{
 		FirstName: newUser.FirstName,
 		LastName:  newUser.LastName,
 		Username:  newUser.Username,
 		Password:  newUser.Password,
 		Email:     newUser.Email,
-		Role:      role,
+		RoleId:    role.ID,
 	}
-	models.Db.Create(&user)
 
-	res.Status(http.StatusOK).Send(w)
+	user.Insert()
+	sendJsonMsg(w, "signup successful")
 }
 
 // login the user
 // returns the JWToken
 func Login(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	l := login{}
+	l := struct {
+		Password string `form:"password" validate:"required,max=36,min=6"`
+		Username string `form:"username" validate:"required,max=36"`
+	}{}
 	// parse form and validate fields
 	if errMap, err := validator.IsValid(r, &l); err != nil {
-		res.Status(http.StatusBadRequest).Json(errMap).Send(w)
+		sendStatus(w, http.StatusBadRequest)
+		sendJson(w, errMap)
 		return
 	}
 
 	// find user
 	user := models.User{}
-	models.Db.Where("username = ?", l.Username).Preload("Role").First(&user)
+	user.SelectByUsername(l.Username)
 	// check if user in db
 	if user == (models.User{}) {
-		res.Status(http.StatusNotFound).Json(res.Error("user not found")).Send(w)
+		sendStatus(w, http.StatusNotFound)
+		sendJsonErr(w, "user not found")
 		return
 	}
 	// check password
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(l.Password))
 	if err != nil {
-		res.Status(http.StatusNotFound).Json(res.Error("password is incorrect")).Send(w)
+		sendStatus(w, http.StatusBadRequest)
+		sendJsonErr(w, "password incorrect")
 		return
 	}
 
-	ju := jwtUser.User{
-		ID:        user.ID,
-		CreatedAt: user.CreatedAt,
-		Username:  user.Username,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
-		Role:      user.Role.Name,
-		RoleId:    user.RoleID,
+	ju := Jwt{
+		User: user,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Unix() + config.TokenDuration,
 			Issuer:    config.TokenIssuer,
 		},
 	}
-	juMap := ju.GetMap()
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, juMap)
+	token, _ := jwt.NewWithClaims(jwt.SigningMethodHS256, ju.GetMap()).SignedString([]byte(config.Secret))
 
-	tokenStr, err := token.SignedString([]byte(config.Secret))
-	if err != nil {
-		panic(err)
-	}
-
-	res.Status(http.StatusOK).Text(tokenStr).Send(w)
+	sendJson(w, map[string]string{"token": token})
 }
